@@ -250,8 +250,8 @@
   <section class="slide" data-step="Thesis">
     <div class="body">
       <p class="small" style="margin-bottom:calc(var(--u)*1.6)">Six pieces of feedback, and what the brief says about the product today.</p>
-      <p class="statement">The most important problem is that a test marked flaky <span class="decision">stays marked flaky</span>, silently, with no cause, no owner, no expiry, and no warning when its behavior changes.</p>
-      <p>That is how one customer shipped a real regression to production.</p>
+      <p class="statement">The most important problem is that once a test is known to be flaky, Cypress gives teams <span class="decision">too little signal</span> when its behavior materially changes.</p>
+      <p>Customers describe the label as permanent ("is it just marked flaky forever?"), and one describes shipping a real regression to production because of it.</p>
     </div>
   </section>
 
@@ -259,8 +259,8 @@
     <h2 class="title">Two distinct problems, not one</h2>
     <p class="lede">I tagged each piece of feedback with the job the customer was trying to do, not the feature they asked for.</p>
     <div class="cols c2">
-      <div class="point chosen"><h3>Flake lifecycle management</h3><p><span class="tag ev">Feedback B, C, D, E</span></p><p>Deciding whether a flake matters, fixing it without poisoning its history, knowing when "flaky" stops being true, muting what you can't act on without losing it.</p></div>
-      <div class="point"><h3>Test segmentation</h3><p><span class="tag ev">Feedback A, F</span></p><p>Rerunning only what failed, running subsets, splitting across parallel machines with different configs.</p></div>
+      <div class="point chosen"><h3>Reliability signal and flake lifecycle</h3><p><strong>Can I trust and act on this failure?</strong></p><p><span class="tag ev">Feedback B, C, D, E</span></p><p>Deciding whether a flake matters, fixing it without poisoning its history, knowing when "flaky" stops being true, muting what you can't act on without losing it.</p></div>
+      <div class="point"><h3>CI execution control</h3><p><strong>Can I run exactly what I need, efficiently?</strong></p><p><span class="tag ev">Feedback A, F</span></p><p>Rerunning only what failed, running subsets, splitting across parallel machines, startup failures, and different environment configs per machine.</p></div>
     </div>
   </section>
 
@@ -282,9 +282,11 @@
     <h2 class="title">Why lifecycle is the more important problem</h2>
     <div class="cols c2 why">
       <div class="point chosen">
-        <p><strong>I am ranking on severity, not volume.</strong> Segmentation costs teams time and money. A stale flaky label costs them a production incident.</p>
+        <p><strong>I am ranking on severity, not volume.</strong> CI execution problems cost teams time and money. A stale flaky label costs them a production incident.</p>
         <p>It is the only case where Cypress's own mechanism makes things worse rather than merely failing to help.</p>
         <p>It is the broadest signal in the sample, with four of six voices.</p>
+        <p><strong>Outcome:</strong> help an engineer make the correct decision about a CI failure faster, while reducing both non-actionable noise and the risk of missed regressions.</p>
+        <p>That serves what Cypress is for: faster, more reliable testing that improves developer productivity and software quality. <span class="tag as">Assumption</span></p>
       </div>
       <div>
         <blockquote class="quote">"A developer merged a PR because the test that was failing had been flagged as flaky before. The next day, that same test failure was a real regression that made it to production."<cite>Feedback D</cite></blockquote>
@@ -294,16 +296,17 @@
   </section>
 
   <section class="slide" data-step="Questions">
-    <h2 class="title">What I would confirm before recommending a solution</h2>
+    <h2 class="title">What I'd confirm before recommending anything</h2>
     <p class="lede" style="margin-bottom:calc(var(--u)*1.2)">Framed as hypotheses I could falsify, in the order that they would change my answer.</p>
     <table class="grid hyp">
       <thead><tr><th>Hypothesis</th><th>What I'd measure</th><th>Why it matters</th></tr></thead>
       <tbody>
         <tr><td class="kind ns">Flaky-flagged tests hide real regressions</td><td>How often a flagged test starts failing consistently with no change in its status</td><td>If this is rare, the whole recommendation shrinks. The one number I most want.</td></tr>
         <tr><td class="kind ns">The flaky label is effectively permanent</td><td>Median time a test stays flagged, and what share ever recovers</td><td>If labels clear on their own, "permanent" is my framing, not the customer's reality.</td></tr>
-        <tr><td class="kind lag">Lifecycle has more signal than segmentation</td><td>Ticket volume and cancellation reasons by theme</td><td>Six quotes can't tell me which is more widespread. If segmentation drives churn, my ranking flips.</td></tr>
+        <tr><td class="kind lag">Lifecycle has more signal than CI execution control</td><td>Ticket volume and cancellation reasons by theme</td><td>Six quotes can't tell me which is more widespread. If CI execution drives churn, my ranking flips.</td></tr>
         <tr><td class="kind lag">Customers are hand-building the lifecycle</td><td>How common tag-and-skip workarounds and side pipelines like C's are</td><td>Tells me how much the status quo actually costs.</td></tr>
         <tr><td class="kind lag">The detection definition is too narrow</td><td>How much flake happens across runs rather than within one</td><td>Caps what any lifecycle feature can see.</td></tr>
+        <tr><td class="kind lag">Available signal supports detection</td><td>Retry history, normalized failure signatures, branch and commit context, and test identity across runs</td><td>If we can't reliably establish a baseline, the proposed intervention doesn't work.</td></tr>
       </tbody>
     </table>
     <p class="small" style="margin-top:calc(var(--u)*.9)">Yellow: the two numbers I would pull before committing a team.</p>
@@ -314,10 +317,10 @@
     <div class="body">
       <div class="cols c3">
         <div class="point"><h3>Compare to its baseline</h3><p>Compare each flaky-flagged test's recent failure pattern to its own baseline.</p></div>
-        <div class="point"><h3>Trigger</h3><p>A run of consecutive failures, or a new error message the test has never produced before.</p></div>
-        <div class="point chosen"><h3>When it fires</h3><p>The test stops being silently excluded, and the team is notified.</p></div>
+        <div class="point"><h3>Candidate signals</h3><p>Sustained failure, or a materially changed failure signature. I'd validate the detection logic against historical data before fixing a threshold.</p></div>
+        <div class="point chosen"><h3>When it fires</h3><p>Cypress elevates the change for review, rather than treating it as ordinary historical flake, and notifies the team.</p></div>
       </div>
-      <p style="margin-top:calc(var(--u)*2.6)">This is the smallest thing that prevents the worst outcome. It is also a prerequisite for anything bigger: quarantine, ownership, and expiry all become safe only once the system can notice a flake turning into a regression.</p>
+      <p style="margin-top:calc(var(--u)*2.6)">This is the smallest thing that could prevent the worst outcome. It is also a prerequisite for anything bigger: quarantine, ownership, and expiry all become safe only once the system can notice a flake turning into a regression.</p>
     </div>
   </section>
 
@@ -327,7 +330,7 @@
       <div class="cols c3">
         <div class="point"><h3>Why before muting</h3><p>Feedback E's request to mute noise is reasonable, but muting without change detection makes D more likely.</p></div>
         <div class="point"><h3>Not specified on purpose</h3><p>The detection threshold, whether state is per-branch, and the notification channel. Each depends on the investigation in the Questions section.</p></div>
-        <div class="point chosen"><h3>How I'd know it worked</h3><p>Track alerts a human confirms as a real regression against alerts dismissed as still flaky. A high confirm rate proves the problem exists at scale. A high dismiss rate means the heuristic needs tuning before it earns default-on.</p></div>
+        <div class="point chosen"><h3>How I'd know it worked</h3><p>Track alert precision against human disposition, and recall against regressions found later. Separately measure how often changed-behavior events occur across customers. Success means faster correct triage without more ignored alerts.</p></div>
       </div>
     </div>
   </section>
@@ -336,7 +339,7 @@
     <h2 class="title">Where I would not trust my own output</h2>
     <div class="cols c2 doubts">
       <div class="point"><h3>The sample</h3><p>Six curated, anonymized quotes. Complaints self-select. If the data comes back thin, I would downgrade to surfacing retry history and move on.</p></div>
-      <div class="point"><h3>Severity over frequency</h3><p>This is a judgment call. If segmentation pain is far more widespread, or is what drives cancellations, I would reverse the ranking and say so.</p></div>
+      <div class="point"><h3>Severity over frequency</h3><p>This is a judgment call. If CI execution pain is far more widespread, or is what drives cancellations, I would reverse the ranking and say so.</p></div>
       <div class="point"><h3>The frame</h3><p>I chose trust. A cost frame is equally available from Feedback A and points at rerun-failed-only as the faster return.</p></div>
       <div class="point"><h3>The feature's own failure mode</h3><p>Alerts that fire too often get muted, and we are back to D. The threshold has to be tuned on real data before notifications are on by default.</p></div>
     </div>
