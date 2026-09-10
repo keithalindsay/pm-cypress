@@ -249,7 +249,7 @@
 
   <section class="slide" data-step="Thesis">
     <div class="body">
-      <p class="small" style="margin-bottom:calc(var(--u)*1.6)">Six pieces of feedback, three product facts.</p>
+      <p class="small" style="margin-bottom:calc(var(--u)*1.6)">Six pieces of feedback, and what the brief says about the product today.</p>
       <p class="statement">The most important problem is that a test marked flaky <span class="decision">stays marked flaky</span>, silently, with no cause, no owner, no expiry, and no warning when its behavior changes.</p>
       <p>That is how one customer shipped a real regression to production.</p>
     </div>
@@ -270,10 +270,9 @@
       <table class="grid">
         <thead><tr><th>Product fact</th><th>What it explains</th></tr></thead>
         <tbody>
-          <tr><td>Flaky tests are excluded from affecting the run's pass/fail status</td><td>Mechanism behind D: a real failure hid behind the flaky flag</td></tr>
+          <tr><td>Flaky tests are excluded from affecting the run's pass/fail status</td><td>Possible mechanism behind D: a real failure hid behind the flaky flag</td></tr>
           <tr><td>No automated alerting when a historically flaky test changes behavior</td><td>D and E, almost verbatim</td></tr>
           <tr><td>Retry history is not surfaced prominently in the run summary</td><td>C: quarantined tests look like bad scripts</td></tr>
-          <tr><td>Flake is only detected when a test passes and fails within one run</td><td>Cross-run flake is invisible to every downstream feature</td></tr>
         </tbody>
       </table>
     </div>
@@ -289,7 +288,7 @@
       </div>
       <div>
         <blockquote class="quote">"A developer merged a PR because the test that was failing had been flagged as flaky before. The next day, that same test failure was a real regression that made it to production."<cite>Feedback D</cite></blockquote>
-        <p class="small"><strong>What I am consciously discounting.</strong> Feedback F is the most severe single quote and the only explicit churn signal. I am discounting it because it is one voice describing a different product surface. That is a judgment call I would want challenged.</p>
+        <p class="small"><strong>What I am consciously discounting.</strong> Feedback F is the most severe single quote and the only explicit churn signal. I am discounting it because it is one voice on a different product surface, and I would weight the prevalence check by revenue, since that one voice may be a large account. That is a judgment call I would want challenged.</p>
       </div>
     </div>
   </section>
@@ -327,7 +326,7 @@
     <div class="body">
       <div class="cols c3">
         <div class="point"><h3>Why before muting</h3><p>Feedback E's request to mute noise is reasonable, but muting without change detection makes D more likely.</p></div>
-        <div class="point"><h3>Not specified on purpose</h3><p>The detection threshold, whether state is per-branch, and the notification channel. Each depends on the data in the questions.</p></div>
+        <div class="point"><h3>Not specified on purpose</h3><p>The detection threshold, whether state is per-branch, and the notification channel. Each depends on the investigation in the Questions section.</p></div>
         <div class="point chosen"><h3>How I'd know it worked</h3><p>Track alerts a human confirms as a real regression against alerts dismissed as still flaky. A high confirm rate proves the problem exists at scale. A high dismiss rate means the heuristic needs tuning before it earns default-on.</p></div>
       </div>
     </div>
