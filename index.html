@@ -223,18 +223,23 @@
     .rail { display: none; }
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
-  .grid .c { text-align: center; width: 5%; }
-  .grid.sig td.c { font-size: calc(var(--u) * 1.8); vertical-align: middle; }
   .slide a { color: var(--signal); }
+  .quote { margin: 0 0 calc(var(--u) * 1.8); padding-left: calc(var(--u) * 1.6); border-left: calc(var(--u) * .35) solid var(--mark); font-family: var(--display); font-size: calc(var(--u) * 1.9); line-height: 1.3; font-weight: 500; }
+  .quote cite { display: block; margin-top: calc(var(--u) * .8); font-family: var(--body); font-style: normal; font-size: calc(var(--u) * 1.1); color: var(--muted); }
+  .cols.why { margin-top: calc(var(--u) * 1); }
+  .grid.hyp { font-size: calc(var(--u) * 1.15); }
+  .grid.hyp td { padding-top: calc(var(--u) * .6); padding-bottom: calc(var(--u) * .6); }
+  .grid.hyp td.kind { white-space: normal; width: 30%; }
+  .cols.doubts { row-gap: calc(var(--u) * 2); }
 </style>
 </head>
 <body>
 <main class="stage" id="stage">
-  <section class="slide cover" data-step="Overview">
+  <section class="slide cover" data-step="Thesis">
     <div>
-      <h1>Marked flaky forever</h1>
-      <p class="lede">A point of view on CI test reliability feedback for Cypress</p>
-      <ul class="agenda"><li>Signals</li><li>Problem</li><li>Questions</li><li>First step</li><li>Doubts</li><li>AI use</li></ul>
+      <h1>Cypress detects flake, then stops</h1>
+      <p class="lede">The label loses meaning, and people stop trusting the signal.</p>
+      <ul class="agenda"><li>Thesis</li><li>Problems</li><li>Questions</li><li>One thing</li><li>Doubts</li></ul>
     </div>
     <div class="byline">
       <div><b>Keith Lindsay</b>Presenter</div>
@@ -242,147 +247,117 @@
     </div>
   </section>
 
-  <section class="slide" data-step="Overview">
+  <section class="slide" data-step="Thesis">
     <div class="body">
-      <p class="statement">Cypress detects flaky tests but gives teams no way to manage them over time. <span class="decision">Before building that, measure how often it hurts</span>, and start by alerting when a flaky test's behavior changes.</p>
-      <p>The answer up front. The rest is how I got there, what I'd confirm first, and where I could be wrong.</p>
+      <p class="small" style="margin-bottom:calc(var(--u)*1.6)">Six pieces of feedback, three product facts.</p>
+      <p class="statement">The most important problem is that a test marked flaky <span class="decision">stays marked flaky</span>, silently, with no cause, no owner, no expiry, and no warning when its behavior changes.</p>
+      <p>That is how one customer shipped a real regression to production.</p>
     </div>
   </section>
 
-  <section class="slide" data-step="Signals">
-    <h2 class="title">Six signals, two distinct problems</h2>
+  <section class="slide" data-step="Problems">
+    <h2 class="title">Two distinct problems, not one</h2>
+    <p class="lede">I tagged each piece of feedback with the job the customer was trying to do, not the feature they asked for.</p>
+    <div class="cols c2">
+      <div class="point chosen"><h3>Flake lifecycle management</h3><p><span class="tag ev">Feedback B, C, D, E</span></p><p>Deciding whether a flake matters, fixing it without poisoning its history, knowing when "flaky" stops being true, muting what you can't act on without losing it.</p></div>
+      <div class="point"><h3>Test segmentation</h3><p><span class="tag ev">Feedback A, F</span></p><p>Rerunning only what failed, running subsets, splitting across parallel machines with different configs.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-step="Problems">
+    <h2 class="title">The current product explains the complaints</h2>
     <div class="body">
-      <table class="grid sig">
-        <thead><tr><th>Problem</th><th class="c">A</th><th class="c">B</th><th class="c">C</th><th class="c">D</th><th class="c">E</th><th class="c">F</th></tr></thead>
+      <table class="grid">
+        <thead><tr><th>Product fact</th><th>What it explains</th></tr></thead>
         <tbody>
-          <tr><td><strong>No way to manage a flaky test's lifecycle</strong><br><span class="small">Triage it, contain it, fix it, or notice when it changes</span></td><td class="c">◐</td><td class="c">●</td><td class="c">●</td><td class="c">●</td><td class="c">●</td><td class="c">–</td></tr>
-          <tr><td><strong>Test segmentation: teams can't control which tests run, and where</strong><br><span class="small">Rerun only failures, run subsets, split across shards with different configs</span></td><td class="c">●</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">●</td></tr>
+          <tr><td>Flaky tests are excluded from affecting the run's pass/fail status</td><td>Mechanism behind D: a real failure hid behind the flaky flag</td></tr>
+          <tr><td>No automated alerting when a historically flaky test changes behavior</td><td>D and E, almost verbatim</td></tr>
+          <tr><td>Retry history is not surfaced prominently in the run summary</td><td>C: quarantined tests look like bad scripts</td></tr>
+          <tr><td>Flake is only detected when a test passes and fails within one run</td><td>Cross-run flake is invisible to every downstream feature</td></tr>
         </tbody>
       </table>
-      <p class="small" style="margin-top:calc(var(--u)*1.6)">● central to the feedback &nbsp; ◐ related &nbsp; – not present. A touches both: rerunning only failed tests is part of managing flake and part of segmentation.</p>
     </div>
   </section>
 
-  <section class="slide" data-step="Problem">
-    <h2 class="title">Core problem: flaky tests are marked flaky forever</h2>
-    <p class="lede">Cypress flags flake within a run, but there's no way to triage it, contain it, fix it, or notice when it changes. The label turns into noise, until it hides a real regression.</p>
-    <div class="cols c3">
-      <div class="point"><h3>Real bugs slip through</h3><p>A test previously flagged flaky failed, the PR merged, and it was a real regression in production. <span class="tag ev">Feedback D</span></p></div>
-      <div class="point"><h3>Noise nobody can act on</h3><p>Teams want to mute known flake they can't fix yet, like a third-party login page. <span class="tag ev">Feedback E</span></p></div>
-      <div class="point"><h3>Manual workarounds</h3><p>Tag-and-exclude pipelines, asks for triage, and reruns just to find out what's real. <span class="tag ev">Feedback A, B, C</span></p></div>
-    </div>
-  </section>
-
-  <section class="slide" data-step="Problem">
-    <h2 class="title">Why this problem first, and what I set aside</h2>
-    <div class="body">
-      <div class="cols c2">
-        <div class="point chosen"><h3>Why it matters most</h3>
-          <p>It has already caused production harm (D).</p>
-          <p>It runs through four of the six signals.</p>
-          <p>Cypress's design contributes: flaky tests don't affect a run's pass or fail status, and there's no alert when a flaky test's behavior changes. <span class="tag ev">Input 2</span></p>
-        </div>
-        <div class="point"><h3>Second issue: test segmentation (A, F)</h3>
-          <p>Teams can't choose which tests run where: rerun only failures, run subsets, or configure shards differently. A distinct problem from flake reliability.</p>
-          <p>F is the only feedback that explicitly mentions leaving, and it may come from a larger, more sophisticated customer. <span class="tag as">Assumption</span></p>
-          <p>Parked, not dismissed. The prevalence check should weigh it by revenue.</p>
-        </div>
+  <section class="slide" data-step="Problems">
+    <h2 class="title">Why lifecycle is the more important problem</h2>
+    <div class="cols c2 why">
+      <div class="point chosen">
+        <p><strong>I am ranking on severity, not volume.</strong> Segmentation costs teams time and money. A stale flaky label costs them a production incident.</p>
+        <p>It is the only case where Cypress's own mechanism makes things worse rather than merely failing to help.</p>
+        <p>It is the broadest signal in the sample, with four of six voices.</p>
+      </div>
+      <div>
+        <blockquote class="quote">"A developer merged a PR because the test that was failing had been flagged as flaky before. The next day, that same test failure was a real regression that made it to production."<cite>Feedback D</cite></blockquote>
+        <p class="small"><strong>What I am consciously discounting.</strong> Feedback F is the most severe single quote and the only explicit churn signal. I am discounting it because it is one voice describing a different product surface. That is a judgment call I would want challenged.</p>
       </div>
     </div>
   </section>
 
   <section class="slide" data-step="Questions">
-    <h2 class="title">Before building anything, find out how often this actually hurts</h2>
-    <ol class="rank">
-      <li><h3>How prevalent is it?</h3><p>Share of customers, projects, and runs with flaky tests, and how much of the quarter's tickets and cancellations trace back to it. Six quotes can't size this.</p><div></div></li>
-      <li><h3>How often does a flaky test let a real bug reach production?</h3><p>D is one incident. Cypress can't see production directly, so we'd need a proxy, like known-flaky failures on commits later reverted or hotfixed, plus customer interviews.</p><div><span class="tag as">Assumption: a proxy exists</span></div></li>
-      <li><h3>What telemetry do we already have on flaky tests?</h3><p>What's captured per attempt, how long it's kept, and whether it's enough to describe a test's normal flaky behavior.</p><div></div></li>
-    </ol>
+    <h2 class="title">What I would confirm before recommending a solution</h2>
+    <p class="lede" style="margin-bottom:calc(var(--u)*1.2)">Framed as hypotheses I could falsify, in the order that they would change my answer.</p>
+    <table class="grid hyp">
+      <thead><tr><th>Hypothesis</th><th>What I'd measure</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td class="kind ns">Flaky-flagged tests hide real regressions</td><td>How often a flagged test starts failing consistently with no change in its status</td><td>If this is rare, the whole recommendation shrinks. The one number I most want.</td></tr>
+        <tr><td class="kind ns">The flaky label is effectively permanent</td><td>Median time a test stays flagged, and what share ever recovers</td><td>If labels clear on their own, "permanent" is my framing, not the customer's reality.</td></tr>
+        <tr><td class="kind lag">Lifecycle has more signal than segmentation</td><td>Ticket volume and cancellation reasons by theme</td><td>Six quotes can't tell me which is more widespread. If segmentation drives churn, my ranking flips.</td></tr>
+        <tr><td class="kind lag">Customers are hand-building the lifecycle</td><td>How common tag-and-skip workarounds and side pipelines like C's are</td><td>Tells me how much the status quo actually costs.</td></tr>
+        <tr><td class="kind lag">The detection definition is too narrow</td><td>How much flake happens across runs rather than within one</td><td>Caps what any lifecycle feature can see.</td></tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:calc(var(--u)*.9)">Yellow: the two numbers I would pull before committing a team.</p>
   </section>
 
-  <section class="slide" data-step="First step">
-    <h2 class="title">First step: learn how each flaky test behaves, and alert when that changes</h2>
+  <section class="slide" data-step="One thing">
+    <h2 class="title">One thing: detect when a flaky test's behavior changes, and tell someone</h2>
     <div class="body">
       <div class="cols c3">
-        <div class="point"><h3>Capture the pattern</h3><p>For each flaky test, record its normal behavior: how often it fails, on which attempts, and how it fails.</p></div>
-        <div class="point chosen"><h3>Alert on change</h3><p>When that pattern changes in any way, flag it for a real look, ideally where the merge decision is made.</p><p><span class="tag as">Assumption: a change is worth a look</span></p></div>
-        <div class="point"><h3>Not specifying yet</h3><p>What counts as a change, thresholds, where alerts appear, or a full lifecycle feature. Those depend on the three questions.</p></div>
+        <div class="point"><h3>Compare to its baseline</h3><p>Compare each flaky-flagged test's recent failure pattern to its own baseline.</p></div>
+        <div class="point"><h3>Trigger</h3><p>A run of consecutive failures, or a new error message the test has never produced before.</p></div>
+        <div class="point chosen"><h3>When it fires</h3><p>The test stops being silently excluded, and the team is notified.</p></div>
       </div>
-      <p class="small" style="margin-top:calc(var(--u)*2.4)">Why this first: it closes a gap Cypress already acknowledges, speaks directly to what happened in D, and produces the telemetry needed to decide whether a larger lifecycle feature is worth building.</p>
+      <p style="margin-top:calc(var(--u)*2.6)">This is the smallest thing that prevents the worst outcome. It is also a prerequisite for anything bigger: quarantine, ownership, and expiry all become safe only once the system can notice a flake turning into a regression.</p>
     </div>
   </section>
 
-  <section class="slide" data-step="First step">
-    <h2 class="title">How we'd know whether the assumption holds</h2>
+  <section class="slide" data-step="One thing">
+    <h2 class="title">What I'm leaving open, and how I'd know it worked</h2>
     <div class="body">
-      <table class="grid">
-        <thead><tr><th>Type</th><th>Measure</th><th>Why it matters</th></tr></thead>
-        <tbody>
-          <tr class="ns-row"><td class="kind ns">Core test</td><td>Share of change alerts that turned out to be worth a real look</td><td>Directly tests the key assumption</td></tr>
-          <tr><td class="kind in">Outcome</td><td>Real regressions caught by a change alert that would have been dismissed as flake</td><td>The harm in D</td></tr>
-          <tr><td class="kind guard">Guardrail</td><td>Alert volume per team, and alerts muted or ignored</td><td>Don't recreate the noise in E</td></tr>
-        </tbody>
-      </table>
-      <p class="small" style="margin-top:calc(var(--u)*1.6)">Targets set after we have a baseline, not before.</p>
-    </div>
-  </section>
-
-  <section class="slide" data-step="Doubts">
-    <h2 class="title">Where I wouldn't trust my own conclusion</h2>
-    <div class="body">
-      <div class="cols c2">
-        <div class="point"><h3>Where I might be wrong</h3>
-          <p>I built this from six quotes Cypress selected and one production incident.</p>
-          <p>A larger lifecycle feature may be the real need, one that also covers triage, quarantine, and rerunning only failed tests (A).</p>
-          <p>I parked test segmentation (A, F) as a second issue, though it may be a big problem for a big customer.</p>
-          <p>Some product knowledge came from AI and is unverified. It's logged as assumptions.</p>
-        </div>
-        <div class="point"><h3>What would change it</h3>
-          <p>Flaky tests turn out to be rare, or rarely let bugs reach production.</p>
-          <p>Telemetry can't tell a changed pattern from normal flake.</p>
-          <p>Cancellations or revenue cluster around test segmentation.</p>
-          <p>Change alerts are mostly false alarms.</p>
-        </div>
+      <div class="cols c3">
+        <div class="point"><h3>Why before muting</h3><p>Feedback E's request to mute noise is reasonable, but muting without change detection makes D more likely.</p></div>
+        <div class="point"><h3>Not specified on purpose</h3><p>The detection threshold, whether state is per-branch, and the notification channel. Each depends on the data in the questions.</p></div>
+        <div class="point chosen"><h3>How I'd know it worked</h3><p>Track alerts a human confirms as a real regression against alerts dismissed as still flaky. A high confirm rate proves the problem exists at scale. A high dismiss rate means the heuristic needs tuning before it earns default-on.</p></div>
       </div>
     </div>
   </section>
 
   <section class="slide" data-step="Doubts">
-    <h2 class="title">Assumptions I'm carrying, and how I'd test them</h2>
-    <div class="body">
-      <table class="grid">
-        <thead><tr><th>Assumption</th><th>Basis</th><th>How to test</th><th>Confidence</th></tr></thead>
-        <tbody>
-          <tr><td>A change in a flaky test's failure pattern is worth a real look</td><td>Feedback D</td><td>Alert precision in a pilot</td><td><span class="conf" data-c="2"><i></i></span></td></tr>
-          <tr><td>The six signals reflect the wider customer base</td><td>Brief calls them representative</td><td>Tag the full quarter's feedback</td><td><span class="conf" data-c="2"><i></i></span></td></tr>
-          <tr><td>Flaky tests letting bugs reach production happens often enough to matter</td><td>One incident (D)</td><td>Revert and hotfix proxy, interviews</td><td><span class="conf" data-c="1"><i></i></span></td></tr>
-          <tr><td>Cypress captures enough per-attempt data to describe a pattern</td><td>AI product knowledge</td><td>Telemetry audit with Cloud engineers</td><td><span class="conf" data-c="2"><i></i></span></td></tr>
-          <tr><td>Feedback F comes from a larger, more sophisticated customer</td><td>Tone and scale of F</td><td>Account lookup</td><td><span class="conf" data-c="1"><i></i></span></td></tr>
-        </tbody>
-      </table>
-      <p class="small" style="margin-top:calc(var(--u)*1.4)">Full register of evidence, assumptions, and risks: <a href="assumptions.html">assumptions.html</a></p>
+    <h2 class="title">Where I would not trust my own output</h2>
+    <div class="cols c2 doubts">
+      <div class="point"><h3>The sample</h3><p>Six curated, anonymized quotes. Complaints self-select. If the data comes back thin, I would downgrade to surfacing retry history and move on.</p></div>
+      <div class="point"><h3>Severity over frequency</h3><p>This is a judgment call. If segmentation pain is far more widespread, or is what drives cancellations, I would reverse the ranking and say so.</p></div>
+      <div class="point"><h3>The frame</h3><p>I chose trust. A cost frame is equally available from Feedback A and points at rerun-failed-only as the faster return.</p></div>
+      <div class="point"><h3>The feature's own failure mode</h3><p>Alerts that fire too often get muted, and we are back to D. The threshold has to be tuned on real data before notifications are on by default.</p></div>
     </div>
   </section>
 
-  <section class="slide" data-step="AI use">
-    <h2 class="title">How I used AI, and where I overruled it</h2>
-    <div class="body">
-      <table class="grid">
-        <thead><tr><th>What the AI produced</th><th>What I did</th></tr></thead>
-        <tbody>
-          <tr><td>Named the symptom: every flaky test looks the same</td><td>Pushed to the cause: no way to understand or manage a flaky test over time</td></tr>
-          <tr><td>Agreed a framing explained five of six signals</td><td>Had it critique itself as a principal PM, then re-scored the fits honestly</td></tr>
-          <tr><td>Stated Cypress product knowledge as fact</td><td>Required anything not in the brief to be logged as an assumption</td></tr>
-          <tr><td>Expanded the direction into a full feature spec</td><td>Pulled back to the smallest step and the questions to answer first</td></tr>
-        </tbody>
-      </table>
+  <section class="slide" data-step="Doubts">
+    <h2 class="title">How I used AI</h2>
+    <p class="lede">It clustered the feedback well and argued against me well. It was reliably bad at restraint.</p>
+    <div class="cols c2">
+      <div class="point chosen"><h3>Kept</h3><p>The clustering of the feedback.</p><p>The counterarguments against my position.</p></div>
+      <div class="point"><h3>Cut</h3><p>A six-feature roadmap.</p><p>A full lifecycle design with a state diagram and data model.</p></div>
     </div>
+    <p style="margin-top:calc(var(--u)*2.2)">That was the strong-versus-weak judgment this exercise asks for.</p>
+    <p class="small">Evidence, assumptions, and risks register: <a href="assumptions.html">assumptions.html</a></p>
   </section>
 
-  <section class="slide cover" data-step="AI use">
+  <section class="slide cover" data-step="Doubts">
     <div class="body">
-      <p class="statement">Understand how flaky tests behave before deciding how to manage them.</p>
-      <p style="color:#AEB8C2">First question for the team: what flaky-test telemetry do we already have?</p>
+      <p class="statement">Cypress detects flake, then stops.</p>
+      <p style="color:#AEB8C2">The smallest fix: notice when a flaky test's behavior changes, and tell someone.</p>
     </div>
   </section>
 
