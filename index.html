@@ -201,7 +201,7 @@
   .nav button:hover, .nav button:focus-visible { opacity: 1; outline: 2px solid var(--mark); outline-offset: 2px; }
 
   /* ---------- narrow screens: stacked, scrollable ---------- */
-  @media (max-width: 820px) {
+  @media screen and (max-width: 820px) {
     body { overflow: auto; height: auto; background: var(--paper); }
     .stage { position: static; transform: none; width: auto; height: auto; box-shadow: none; overflow: visible; }
     .slide { --u: 9px; position: relative; inset: auto; opacity: 1; visibility: visible; padding: 48px 20px; border-bottom: 1px solid var(--rule); min-height: 0; }
